@@ -1045,7 +1045,10 @@ static void hub_activate(struct usb_hub *hub, enum hub_activation_type type)
 		}
 		if (type == HUB_INIT2)
 			goto init2;
+<<<<<<< HEAD
 
+=======
+>>>>>>> 425b3d7... USB: fix invalid memory access in hub_activate()
 		goto init3;
 	}
 	kref_get(&hub->kref);
