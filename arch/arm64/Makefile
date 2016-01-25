@@ -20,7 +20,12 @@ LIBGCC 		:= $(shell $(CC) $(KBUILD_CFLAGS) -print-libgcc-file-name)
 KBUILD_DEFCONFIG := defconfig
 
 KBUILD_CFLAGS	+= -mgeneral-regs-only
+<<<<<<< HEAD
 KBUILD_CFLAGS	+= -fno-pic
+=======
+KBUILD_CFLAGS	+= $(call cc-option, -mpc-relative-literal-loads)
+
+>>>>>>> 8afa97b... arm64: errata: Add -mpc-relative-literal-loads to build flags
 ifeq ($(CONFIG_CPU_BIG_ENDIAN), y)
 KBUILD_CPPFLAGS	+= -mbig-endian
 AS		+= -EB
