@@ -1581,7 +1581,11 @@ struct xhci_hcd {
 #define XHCI_MTK_HOST		(1 << 21)
 =======
 #define XHCI_SSIC_PORT_UNUSED	(1 << 22)
+<<<<<<< HEAD
 >>>>>>> 264cc74... usb: xhci: add a quirk bit for ssic port unused
+=======
+#define XHCI_NO_64BIT_SUPPORT	(1 << 23)
+>>>>>>> f1aa53d... usb: host: xhci: add a new quirk XHCI_NO_64BIT_SUPPORT
 	unsigned int		num_active_eps;
 	unsigned int		limit_active_eps;
 	/* There are two roothubs to keep track of bus suspend info for */
