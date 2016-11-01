@@ -940,6 +940,7 @@ static netdev_tx_t eth_start_xmit(struct sk_buff *skb,
 
 	req->length = length;
 
+<<<<<<< HEAD:drivers/usb/gadget/u_ether.c
 	/* throttle high/super speed IRQ rate back slightly */
 <<<<<<< HEAD:drivers/usb/gadget/u_ether.c
 	if (gadget_is_dualspeed(dev->gadget) &&
@@ -965,6 +966,8 @@ static netdev_tx_t eth_start_xmit(struct sk_buff *skb,
 			: 0;
 
 >>>>>>> 27c8728... usb: gadget: function: u_ether: don't starve tx request queue:drivers/usb/gadget/function/u_ether.c
+=======
+>>>>>>> 24c31e9... usb: gadget: u_ether: remove interrupt throttling:drivers/usb/gadget/function/u_ether.c
 	retval = usb_ep_queue(in, req, GFP_ATOMIC);
 	switch (retval) {
 	default:
