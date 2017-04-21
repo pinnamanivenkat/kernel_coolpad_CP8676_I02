@@ -652,7 +652,19 @@ fail:
 	}
 	iocb->private = priv;
 	priv->iocb = iocb;
+<<<<<<< HEAD:drivers/usb/gadget/inode.c
 	priv->iv = iv;
+=======
+	if (iv) {
+		priv->iv = kmemdup(iv, nr_segs * sizeof(struct iovec),
+				   GFP_KERNEL);
+		if (!priv->iv) {
+			kfree(priv);
+			value = -ENOMEM;
+			goto fail;
+		}
+	}
+>>>>>>> 279b8b7... gadgetfs: fix uninitialized variable in error handling:drivers/usb/gadget/legacy/inode.c
 	priv->nr_segs = nr_segs;
 	INIT_WORK(&priv->work, ep_user_copy_worker);
 
