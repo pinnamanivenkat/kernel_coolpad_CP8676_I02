@@ -172,25 +172,12 @@ static void gic_enable_redist(void)
 	val &= ~GICR_WAKER_ProcessorSleep;
 	writel_relaxed(val, rbase + GICR_WAKER);
 
-<<<<<<< HEAD
 	while (readl_relaxed(rbase + GICR_WAKER) & GICR_WAKER_ChildrenAsleep) {
 		count--;
 		if (!count) {
 			pr_err_ratelimited("redist didn't wake up...\n");
 			return;
 		}
-=======
-	if (!enable) {		/* Check that GICR_WAKER is writeable */
-		val = readl_relaxed(rbase + GICR_WAKER);
-		if (!(val & GICR_WAKER_ProcessorSleep))
-			return;	/* No PM support in this redistributor */
-	}
-
-	while (--count) {
-		val = readl_relaxed(rbase + GICR_WAKER);
-		if (enable ^ (val & GICR_WAKER_ChildrenAsleep))
-			break;
->>>>>>> 60299e3... irqchip/gicv3: Handle loop timeout proper
 		cpu_relax();
 		udelay(1);
 	};
@@ -538,27 +525,15 @@ out:
 	return tlist;
 }
 
-#define MPIDR_TO_SGI_AFFINITY(cluster_id, level) \
-	(MPIDR_AFFINITY_LEVEL(cluster_id, level) \
-		<< ICC_SGI1R_AFFINITY_## level ##_SHIFT)
-
 static void gic_send_sgi(u64 cluster_id, u16 tlist, unsigned int irq)
 {
 	u64 val;
 
-<<<<<<< HEAD
 	val = (MPIDR_AFFINITY_LEVEL(cluster_id, 3) << 48	|
 		MPIDR_AFFINITY_LEVEL(cluster_id, 2) << 32	|
 		irq << 24					|
 		MPIDR_AFFINITY_LEVEL(cluster_id, 1) << 16	|
 		tlist);
-=======
-	val = (MPIDR_TO_SGI_AFFINITY(cluster_id, 3)	|
-	       MPIDR_TO_SGI_AFFINITY(cluster_id, 2)	|
-	       irq << ICC_SGI1R_SGI_ID_SHIFT		|
-	       MPIDR_TO_SGI_AFFINITY(cluster_id, 1)	|
-	       tlist << ICC_SGI1R_TARGET_LIST_SHIFT);
->>>>>>> 045f089... arm64: GICv3: introduce symbolic names for GICv3 ICC_SGI1R_EL1 fields
 
 	pr_debug("CPU%d: ICC_SGI1R_EL1 %llx\n", smp_processor_id(), val);
 	gic_write_sgi1r(val);

@@ -370,13 +370,7 @@ static int f_midi_set_alt(struct usb_function *f, unsigned intf, unsigned alt)
 	/* allocate a bunch of read buffers and queue them all at once. */
 	for (i = 0; i < midi->qlen && err == 0; i++) {
 		struct usb_request *req =
-<<<<<<< HEAD:drivers/usb/gadget/f_midi.c
 			alloc_ep_req(midi->out_ep, midi->buflen);
-=======
-			midi_alloc_ep_req(midi->out_ep,
-				max_t(unsigned, midi->buflen,
-					bulk_out_desc.wMaxPacketSize));
->>>>>>> 5a877ce... usb: gadget: f_midi: Fixed a bug when buflen was smaller than wMaxPacketSize:drivers/usb/gadget/function/f_midi.c
 		if (req == NULL)
 			return -ENOMEM;
 

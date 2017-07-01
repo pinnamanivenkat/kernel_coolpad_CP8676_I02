@@ -554,20 +554,13 @@ static int acm_notify_serial_state(struct f_acm *acm)
 {
 	struct usb_composite_dev *cdev = acm->port.func.config->cdev;
 	int			status;
-	__le16			serial_state;
 
 	spin_lock(&acm->lock);
 	if (acm->notify_req) {
-<<<<<<< HEAD:drivers/usb/gadget/f_acm.c
 		DBG(cdev, "acm ttyGS%d serial state %04x\n",
 				acm->port_num, acm->serial_state);
-=======
-		dev_dbg(&cdev->gadget->dev, "acm ttyGS%d serial state %04x\n",
-			acm->port_num, acm->serial_state);
-		serial_state = cpu_to_le16(acm->serial_state);
->>>>>>> 13cabfa... ACM gadget: fix endianness in notifications:drivers/usb/gadget/function/f_acm.c
 		status = acm_cdc_notify(acm, USB_CDC_NOTIFY_SERIAL_STATE,
-				0, &serial_state, sizeof(acm->serial_state));
+				0, &acm->serial_state, sizeof(acm->serial_state));
 	} else {
 		acm->pending = true;
 		status = 0;

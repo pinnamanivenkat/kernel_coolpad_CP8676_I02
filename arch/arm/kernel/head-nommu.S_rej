@@ -1,0 +1,29 @@
+--- arch/arm/kernel/head-nommu.S
++++ arch/arm/kernel/head-nommu.S
+@@ -113,23 +111,19 @@
+ 	bl      __setup_mpu			@ Initialize the MPU
+ #endif
+ 
+-	adr	lr, BSYM(__after_proc_init)	@ return address
+-	mov	r13, r12			@ __secondary_switched address
++	adr	lr, BSYM(1f)			@ return (PIC) address
+  ARM(	add	pc, r10, #PROCINFO_INITFUNC	)
+  THUMB(	add	r12, r10, #PROCINFO_INITFUNC	)
+  THUMB(	ret	r12				)
+-ENDPROC(secondary_startup)
+-
+-ENTRY(__secondary_switched)
++1:	bl	__after_proc_init
+ 	ldr	sp, [r7, #12]			@ set up the stack pointer
+ 	mov	fp, #0
+ 	b	secondary_start_kernel
+-ENDPROC(__secondary_switched)
++ENDPROC(secondary_startup)
+ 
+ 	.type	__secondary_data, %object
+ __secondary_data:
+ 	.long	secondary_data
+-	.long	__secondary_switched
+ #endif /* CONFIG_SMP */
+ 
+ /*

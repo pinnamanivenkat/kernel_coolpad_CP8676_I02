@@ -505,22 +505,19 @@ struct mem_size_stats {
 #endif
 };
 
-<<<<<<< HEAD
 #ifdef CONFIG_SWAP
 static inline unsigned char swap_count(unsigned char ent)
 {
 	return ent & ~SWAP_HAS_CACHE;	/* may include SWAP_HAS_CONT flag */
 }
 #endif
-=======
+
 static void smaps_account(struct mem_size_stats *mss, struct page *page,
 		unsigned long size, bool young, bool dirty)
 {
 	int mapcount;
-
 	if (PageAnon(page))
 		mss->anonymous += size;
->>>>>>> 20b97db... mm: fix huge zero page accounting in smaps report
 
 	mss->resident += size;
 	/* Accumulate the size in pages that have been accessed. */
@@ -559,16 +556,15 @@ static void smaps_pte_entry(pte_t *pte, unsigned long addr,
 	} else if (is_swap_pte(*pte)) {
 		swp_entry_t swpent = pte_to_swp_entry(*pte);
 
-<<<<<<< HEAD
 		/* M for pswap interface */
 		if (!non_swap_entry(swpent)) {
 #ifdef CONFIG_SWAP
 			swp_entry_t entry;
 			struct swap_info_struct *p;
 #endif /* CONFIG_SWAP*/
-			mss->swap += ptent_size;
+			mss->swap += PAGE_SIZE;
 #ifdef CONFIG_SWAP
-			entry = pte_to_swp_entry(ptent);
+			entry = pte_to_swp_entry(*pte);
 			if (non_swap_entry(entry))
 				return;
 			p = swap_info_get(entry);
@@ -585,17 +581,12 @@ static void smaps_pte_entry(pte_t *pte, unsigned long addr,
 				else
 					mss->pswap += (ptent_size << PSS_SHIFT) / swapcount;
 #else
-				mss->pswap += (ptent_size << PSS_SHIFT) / swapcount;
+				mss->pswap += (PAGE_SIZE << PSS_SHIFT) / swapcount;
 #endif
 				swap_info_unlock(p);
 			}
 #endif /* CONFIG_SWAP*/
 		} else if (is_migration_entry(swpent))
-=======
-		if (!non_swap_entry(swpent))
-			mss->swap += PAGE_SIZE;
-		else if (is_migration_entry(swpent))
->>>>>>> 20b97db... mm: fix huge zero page accounting in smaps report
 			page = migration_entry_to_page(swpent);
 	} else if (pte_file(*pte)) {
 		if (pte_to_pgoff(*pte) != pgoff)

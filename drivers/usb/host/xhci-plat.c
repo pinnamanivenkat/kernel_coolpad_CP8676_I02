@@ -253,13 +253,11 @@ static int xhci_plat_remove(struct platform_device *dev)
 	struct xhci_hcd	*xhci = hcd_to_xhci(hcd);
 	struct clk *clk = xhci->clk;
 
-<<<<<<< HEAD
 #ifdef CONFIG_USB_XHCI_MTK
 	mtk_xhci_vbus_off(dev);
 #endif
-=======
+
 	xhci->xhc_state |= XHCI_STATE_REMOVING;
->>>>>>> 1c8d3fa... usb: host: xhci-plat: Fix timeout on removal of hot pluggable xhci controllers
 
 	usb_remove_hcd(xhci->shared_hcd);
 	usb_put_hcd(xhci->shared_hcd);

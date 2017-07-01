@@ -629,12 +629,7 @@ uvc_function_bind(struct usb_configuration *c, struct usb_function *f)
 	uvc_ss_streaming_comp.bmAttributes = max_packet_mult - 1;
 	uvc_ss_streaming_comp.bMaxBurst = streaming_maxburst;
 	uvc_ss_streaming_comp.wBytesPerInterval =
-<<<<<<< HEAD:drivers/usb/gadget/f_uvc.c
 		max_packet_size * max_packet_mult * streaming_maxburst;
-=======
-		cpu_to_le16(max_packet_size * max_packet_mult *
-			    (opts->streaming_maxburst + 1));
->>>>>>> c7ca3f4... usb: gadget: f_uvc: Fix SuperSpeed companion descriptor's wBytesPerInterval:drivers/usb/gadget/function/f_uvc.c
 
 	/* Allocate endpoints. */
 	ep = usb_ep_autoconfig(cdev->gadget, &uvc_control_ep);

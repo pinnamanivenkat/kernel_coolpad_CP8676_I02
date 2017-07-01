@@ -20,7 +20,7 @@
 
 #include <linux/init.h>
 #include <linux/linkage.h>
-
+#include <asm/asm-uaccess.h>
 #include <asm/alternative-asm.h>
 #include <asm/assembler.h>
 #include <asm/asm-offsets.h>
@@ -28,7 +28,6 @@
 #include <asm/errno.h>
 #include <asm/esr.h>
 #include <asm/thread_info.h>
-#include <asm/asm-uaccess.h>
 #include <asm/unistd.h>
 
 /*
@@ -671,11 +670,7 @@ el0_inv:
 	mov	x0, sp
 	mov	x1, #BAD_SYNC
 	mrs	x2, esr_el1
-<<<<<<< HEAD
-	bl	bad_mode
-=======
 	bl	bad_el0_sync
->>>>>>> 21ffe52... arm64: avoid returning from bad_mode
 	b	ret_to_user
 ENDPROC(el0_sync)
 

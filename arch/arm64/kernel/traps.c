@@ -406,7 +406,7 @@ asmlinkage void bad_mode(struct pt_regs *regs, int reason, unsigned int esr)
 #endif
 
 	pr_crit("Bad mode in %s handler detected, code 0x%08x\n",
-		handler[reason], esr);
+			handler[reason], esr);
 
 	die("Oops - bad mode", regs, 0);
 	local_irq_disable();
@@ -422,6 +422,15 @@ asmlinkage void bad_el0_sync(struct pt_regs *regs, int reason, unsigned int esr)
 	siginfo_t info;
 	void __user *pc = (void __user *)instruction_pointer(regs);
 	console_verbose();
+
+#ifdef CONFIG_MEDIATEK_SOLUTION
+	/*
+	 *	* reason is defined in entry.S, 3 means BAD_ERROR,
+	 *	* which would be triggered by async abort
+	 */
+	if ((reason == 3) && async_abort_handler)
+		async_abort_handler(regs, async_abort_priv);
+#endif
 
 	pr_crit("Bad EL0 synchronous exception detected on CPU%d, code 0x%08x\n",
 		smp_processor_id(), esr);
