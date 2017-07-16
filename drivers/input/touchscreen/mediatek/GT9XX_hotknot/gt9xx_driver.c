@@ -2972,6 +2972,13 @@ static int touch_event_handler(void *unused)
 
                 if (DOZE_WAKEUP == doze_status && (gesture_key != KEY_UNKNOWN))
                 {
+						if(gesture_key!=KEY_WAKEUP) {
+						 	input_report_key(tpd->dev, KEY_WAKEUP, 1);
+						 	input_sync(tpd->dev);
+						 	input_report_key(tpd->dev, KEY_WAKEUP, 0);
+						 	input_sync(tpd->dev);
+						}
+
 					 	input_report_key(tpd->dev, gesture_key, 1);
 				     	input_sync(tpd->dev);
 				     	input_report_key(tpd->dev, gesture_key, 0);
