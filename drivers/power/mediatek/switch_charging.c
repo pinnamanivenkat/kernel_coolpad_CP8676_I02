@@ -52,6 +52,11 @@
 #include <mach/diso.h>
 #endif
 
+/* ============================================================ // */
+/* fast charge */
+/* ============================================================ // */
+#include "linux/charge_level.h"
+
 
 /* ============================================================ // */
 /* define */
@@ -960,7 +965,10 @@ void select_charging_current(void)
 			g_temp_input_CC_value = CHARGE_CURRENT_500_00_MA;
 		} else {
 			g_temp_input_CC_value = CHARGE_CURRENT_MAX;
-			g_temp_CC_value = batt_cust_data.ac_charger_current;
+			if(qc_enable)
+			    g_temp_CC_value = ac_level;
+			else
+			    g_temp_CC_value = AC_CHARGE_LEVEL_DEFAULT;
 
 			battery_log(BAT_LOG_CRTI, "[BATTERY] set_ac_current \r\n");
 		}
@@ -984,8 +992,13 @@ void select_charging_current(void)
 			}
 #else
 			{
-				g_temp_input_CC_value = batt_cust_data.usb_charger_current;
-				g_temp_CC_value = batt_cust_data.usb_charger_current;
+			    if(qc_enable) {
+			    	g_temp_input_CC_value = usb_level;
+			    	g_temp_CC_value = usb_level;
+			    } else {
+			    	g_temp_input_CC_value = USB_CHARGE_LEVEL_DEFAULT;
+			    	g_temp_CC_value = USB_CHARGE_LEVEL_DEFAULT;
+			    }
 			}
 #endif
 		} else if (BMT_status.charger_type == NONSTANDARD_CHARGER) {
@@ -993,12 +1006,13 @@ void select_charging_current(void)
 			g_temp_CC_value = batt_cust_data.non_std_ac_charger_current;
 
 		} else if (BMT_status.charger_type == STANDARD_CHARGER) {
-			if (batt_cust_data.ac_charger_input_current != 0)
-				g_temp_input_CC_value = batt_cust_data.ac_charger_input_current;
-			else
-				g_temp_input_CC_value = batt_cust_data.ac_charger_current;
-
-			g_temp_CC_value = batt_cust_data.ac_charger_current;
+			if(qc_enable) {
+			    g_temp_input_CC_value = ac_level;
+			    g_temp_CC_value = ac_level;
+			} else {
+			    g_temp_input_CC_value = AC_CHARGE_LEVEL_DEFAULT;
+			    g_temp_CC_value = AC_CHARGE_LEVEL_DEFAULT;
+			}
 #if defined(CONFIG_MTK_PUMP_EXPRESS_PLUS_SUPPORT)
 			if (is_ta_connect == KAL_TRUE)
 				set_ta_charging_current();
@@ -1022,11 +1036,16 @@ void select_charging_current(void)
 
 #if defined(CONFIG_MTK_DUAL_INPUT_CHARGER_SUPPORT)
 		if (DISO_data.diso_state.cur_vdc_state == DISO_ONLINE) {
-			g_temp_input_CC_value = batt_cust_data.ac_charger_current;
-			g_temp_CC_value = batt_cust_data.ac_charger_current;
+			if(qc_enable) {
+			    g_temp_input_CC_value = ac_level;
+			    g_temp_CC_value = ac_level;
+			} else {
+			    g_temp_input_CC_value = AC_CHARGE_LEVEL_DEFAULT;
+			    g_temp_CC_value = AC_CHARGE_LEVEL_DEFAULT;
+			}
 		}
 #endif
-
+		printk("Fast-Charge (Using charge rate %d mA\n", g_temp_input_CC_value / 100);
 #if defined(CONFIG_MTK_JEITA_STANDARD_SUPPORT)
 		set_jeita_charging_current();
 #endif
@@ -1101,14 +1120,10 @@ static void pchr_turn_on_charging(void)
 		/*add end by sunxiaogang@yulong.com 2015.07.20*/
 		/* Set Charging Current */
 		if (get_usb_current_unlimited()) {
-			if (batt_cust_data.ac_charger_input_current != 0)
-				g_temp_input_CC_value = batt_cust_data.ac_charger_input_current;
-			else
-				g_temp_input_CC_value = batt_cust_data.ac_charger_current;
-
-			g_temp_CC_value = batt_cust_data.ac_charger_current;
-			battery_log(BAT_LOG_FULL,
-				    "USB_CURRENT_UNLIMITED, use batt_cust_data.ac_charger_current\n");
+			g_temp_input_CC_value = USB_CHARGE_LEVEL_MAX;
+			g_temp_CC_value = USB_CHARGE_LEVEL_MAX;
+			battery_log(BAT_LOG_CRTI,
+					    "USB_CURRENT_UNLIMITED, use USB_CHARGE_LEVEL_MAX\n");
 #ifndef CONFIG_MTK_SWITCH_INPUT_OUTPUT_CURRENT_SUPPORT
 		/*modify by sunxiaogang@yulong.com 2015.07.20 for thermal regulation when charging*/
 		#if defined(CONFIG_YULONG_BQ24296_SUPPORT)
@@ -1119,12 +1134,17 @@ static void pchr_turn_on_charging(void)
         	/*modify end by sunxiaogang@yulong.com 2015.07.20*/
 			select_charging_current_bcct();
 
-			battery_log(BAT_LOG_FULL, "[BATTERY] select_charging_current_bcct !\n");
+			battery_log(BAT_LOG_CRTI, "[BATTERY] select_charging_current_bcct !\n");
 		} else {
 			select_charging_current();
 
 			battery_log(BAT_LOG_FULL, "[BATTERY] select_charging_current !\n");
 		}
+		battery_log(BAT_LOG_CRTI,
+				    "[BATTERY] Default CC mode charging : %d, input current = %d\r\n",
+				    g_temp_CC_value, g_temp_input_CC_value);
+
+		printk("Fast-Charge: Using charge rate %d mA\n", g_temp_input_CC_value);
 #else
 		/*modify by sunxiaogang@yulong.com 2015.07.20 for thermal regulation when charging*/
 		#if defined(CONFIG_YULONG_BQ24296_SUPPORT)

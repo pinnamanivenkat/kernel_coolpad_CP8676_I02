@@ -82,6 +82,16 @@
 #if defined(CONFIG_MTK_PUMP_EXPRESS_PLUS_SUPPORT)
 #include <mach/mt_pe.h>
 #endif
+
+/* ============================================================ // */
+/* fast charge */
+/* ============================================================ // */
+#include "linux/charge_level.h"
+ 
+int ac_level = AC_CHARGE_LEVEL_DEFAULT;    // Set AC default charge level
+int usb_level  = USB_CHARGE_LEVEL_DEFAULT; // Set USB default charge level
+int qc_enable = 1;
+
 /* ////////////////////////////////////////////////////////////////////////////// */
 /* Battery Logging Entry */
 /* ////////////////////////////////////////////////////////////////////////////// */
@@ -2290,13 +2300,20 @@ static void mt_battery_average_method_init(BATTERY_AVG_ENUM type, unsigned int *
 				if ((BMT_status.charger_type == STANDARD_CHARGER) ||
 				    (DISO_data.diso_state.cur_vdc_state == DISO_ONLINE)) {
 #endif
-					data = batt_cust_data.ac_charger_current / 100;
+					if(qc_enable)
+						    data = ac_level / 100;
+					else
+					    data = AC_CHARGE_LEVEL_DEFAULT / 100;
 				} else if (BMT_status.charger_type == CHARGING_HOST) {
 					data = batt_cust_data.charging_host_charger_current / 100;
 				} else if (BMT_status.charger_type == NONSTANDARD_CHARGER)
 					data = batt_cust_data.non_std_ac_charger_current / 100;	/* mA */
-				else	/* USB */
-					data = batt_cust_data.usb_charger_current / 100;	/* mA */
+				else {	/* USB */
+					if(qc_enable)
+					    data = usb_level / 100;
+					else
+					    data = USB_CHARGE_LEVEL_DEFAULT / 100;	/* mA */
+				}
 #ifdef AVG_INIT_WITH_R_SENSE
 				data = AVG_INIT_WITH_R_SENSE(data);
 #endif
@@ -2309,13 +2326,20 @@ static void mt_battery_average_method_init(BATTERY_AVG_ENUM type, unsigned int *
 				if ((BMT_status.charger_type == STANDARD_CHARGER) ||
 				    (DISO_data.diso_state.cur_vdc_state == DISO_ONLINE)) {
 #endif
-					data = batt_cust_data.ac_charger_current / 100;
+					if(qc_enable)
+						data = ac_level / 100;
+	 				else
+	 				    data = AC_CHARGE_LEVEL_DEFAULT / 100;
 				} else if (BMT_status.charger_type == CHARGING_HOST) {
 					data = batt_cust_data.charging_host_charger_current / 100;
 				} else if (BMT_status.charger_type == NONSTANDARD_CHARGER)
 					data = batt_cust_data.non_std_ac_charger_current / 100;	/* mA */
-				else	/* USB */
-					data = batt_cust_data.usb_charger_current / 100;	/* mA */
+				else {/* USB */
+		            if(qc_enable)
+					    data = usb_level / 100;
+					else
+						data = USB_CHARGE_LEVEL_DEFAULT / 100;
+				}
 #ifdef AVG_INIT_WITH_R_SENSE
 				data = AVG_INIT_WITH_R_SENSE(data);
 #endif
