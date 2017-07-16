@@ -14,6 +14,7 @@
 #include "upmu_common.h"
 #include <linux/of_irq.h>
 #include <linux/interrupt.h>
+#include <uapi/linux/input.h>
 
 #if defined(CONFIG_GTP_SUPPORT_I2C_DMA)
 #include <linux/dma-mapping.h>
@@ -77,7 +78,7 @@ enum support_gesture_e {
                                 TW_SUPPORT_M_SLIDE_WAKEUP | TW_SUPPORT_DOUBLE_CLICK_WAKEUP)
 };
 
-u32 support_gesture = TW_SUPPORT_NONE_SLIDE_WAKEUP;
+u32 support_gesture = TW_SUPPORT_GESTURE_IN_ALL;
 char wakeup_string_buffer[32];
 
 extern struct device *touchscreen_get_dev(void);
@@ -1449,77 +1450,6 @@ int goodix_read_sensor_id(struct goodix_ts_data *ts)
     return ts->gtp_sensor_id;
 }
 
-/**
-extern int get_device_info(char* buf);
-int goodix_get_info(void)
-{
-    u16 version_info;
-    unsigned char tp_type;
-    s32 ret = -1;
-    int retry_c=10;
-    unsigned char buf[50]={0};
-    GTP_DEBUG("Enter %s\n", __func__);
-**/
-//    while(retry_c > 0)/** reading firmware version has 10 times chances**/
-/**    {
-
-        ret = gtp_read_version(i2c_client_point, &version_info);
-
-        if (ret < 0) {
-            GTP_ERROR("Read version failed.");
-        } else {
-            break;
-        }
-        retry_c--;
-    }
-
-    if(retry_c <= 0)
-    {
-        GTP_DEBUG("..func:%s read version error!!!\n",__func__);
-        return -1 ;
-    }
-
-
-    tp_type = goodix_read_sensor_id(goodix_ts);//read tp type: OFILM or SHENYUE
-
-    if(tp_type == TW_SHENYUE_ID)
-    {
-        sprintf(buf, "TW : SHENYUE:GT9158 0x%04x\n", version_info); //Display the right firmware version
-       get_device_info(buf);
-        return ret;
-    }
-    if(tp_type == TW_YEJI_ID)
-    {
-        sprintf(buf, "TW : YEJI:GT9158 0x%04x\n", version_info); //Display the right firmware version
-        get_device_info(buf);
-        return ret;
-    }
-    if(tp_type == TW_OFILM_ID)
-    {
-        sprintf(buf, "TW : OFILM:GT9158 0x%04x\n",version_info); //Display the right firmware version
-        get_device_info(buf);
-        return ret;
-    }
-
-//  if(tp_type == TW_TOPTOUCH_ID)
-//  {
-//      sprintf(buf, "TW : TOPTOUCH:GT970 0x%04x\n",version_info); //Display the right firmware version
-//      get_device_info(buf);
-//      return ret;
-//  }
-//  if(tp_type == TW_JUNDA_ID)
-//  {
-//      sprintf(buf, "TW : JUNDA:GT970 0x%04x\n",version_info); //Display the right firmware version
-//      get_device_info(buf);
-//      return ret;
-//  }
-    
-    sprintf(buf, "TW : unknown touch\n"); //Display the right firmware version
-    get_device_info(buf);
-    return ret;
-}
-**/
-
 int goodix_get_firmware_version( char *buf)
 {
     u16 version_info;
@@ -1530,9 +1460,6 @@ int goodix_get_firmware_version( char *buf)
     u8 cfg_info_group1[] = CTP_CFG_GROUP1;
     u8 cfg_info_group2[] = CTP_CFG_GROUP2;
     u8 cfg_info_group3[] = CTP_CFG_GROUP3;
- //   u8 cfg_info_group4[] = CTP_CFG_GROUP4;
-  //  u8 cfg_info_group5[] = CTP_CFG_GROUP5;
-  //  u8 cfg_info_group6[] = CTP_CFG_GROUP6;
 
     GTP_DEBUG("Enter %s\n", __func__);
 
@@ -1567,12 +1494,6 @@ int goodix_get_firmware_version( char *buf)
         return sprintf(buf, "%s%04x:%2x","OFILM:GT9158:0x",version_info,cfg_info_group3[0]);
     }
 
-//  if(tp_type == TW_TOPTOUCH_ID) {
-//      return sprintf(buf, "%s%04x:%2x","TOPTOUCH:GT970:0x",version_info,cfg_info_group4[0]);
-//  }
-//  if(tp_type == TW_JUNDA_ID) {
-//      return sprintf(buf, "%s%04x:%2x","JUNDA:GT970:0x",version_info,cfg_info_group6[0]);
-//  }
     return -1; //the AP read the inode failed!!!!!
 }
 
@@ -1818,6 +1739,11 @@ int goodix_set_tp_mode(touch_mode_type type)
 int goodix_get_wakeup_gesture(char*  gesture)
 {
         return sprintf(gesture, "%s", (char *)wakeup_string_buffer);
+}
+
+int goodix_get_gesture_ctrl(char*  ctrl)
+{
+        return sprintf(ctrl, "0x%08x", support_gesture);
 }
 
 int goodix_gesture_ctrl(const char*  gesture_buf)
@@ -2296,6 +2222,7 @@ touchscreen_ops_tpye goodix_ts_ops = {
 #if defined(CONFIG_GTP_SLIDE_WAKEUP)
     .get_wakeup_gesture = goodix_get_wakeup_gesture,
     .gesture_ctrl = goodix_gesture_ctrl,
+	.get_gesture_ctrl = goodix_get_gesture_ctrl,
 #endif
 #if TPD_SMART_HULL
     .smarthull_ctrl = goodix_smarthull_ctrl,
@@ -2415,7 +2342,17 @@ static s32 tpd_i2c_probe(struct i2c_client *client, const struct i2c_device_id *
 					     tpd_dts_data.tpd_key_local[idx]);
 	}
 #if defined(CONFIG_GTP_SLIDE_WAKEUP)
-	input_set_capability(tpd->dev, EV_KEY, KEY_POWER);
+    set_bit(EV_KEY, tpd->dev->evbit);
+    set_bit(KEY_WAKEUP, tpd->dev->keybit);
+    set_bit(KEY_GESTURE_SLIDE_DOWN, tpd->dev->keybit);
+    set_bit(KEY_GESTURE_SLIDE_LEFT, tpd->dev->keybit);
+    set_bit(KEY_GESTURE_SLIDE_RIGHT, tpd->dev->keybit);
+    set_bit(KEY_GESTURE_SLIDE_C, tpd->dev->keybit);
+    set_bit(KEY_GESTURE_SLIDE_O, tpd->dev->keybit);
+    set_bit(KEY_GESTURE_SLIDE_UP, tpd->dev->keybit);
+    set_bit(KEY_GESTURE_SLIDE_E, tpd->dev->keybit);
+    set_bit(KEY_GESTURE_SLIDE_M, tpd->dev->keybit);
+    set_bit(KEY_GESTURE_SLIDE_W, tpd->dev->keybit);
 #endif
 
 #if defined(CONFIG_GTP_WITH_PEN)
@@ -2424,12 +2361,6 @@ static s32 tpd_i2c_probe(struct i2c_client *client, const struct i2c_device_id *
 	__set_bit(INPUT_PROP_DIRECT, tpd->dev->propbit);
 	/* __set_bit(INPUT_PROP_POINTER, tpd->dev->propbit); // 20130722 */
 #endif
-	/* set INT mode */
-	/*
-	   mt_set_gpio_mode(GPIO_CTP_EINT_PIN, GPIO_CTP_EINT_PIN_M_EINT);
-	   mt_set_gpio_dir(GPIO_CTP_EINT_PIN, GPIO_DIR_IN);
-	   mt_set_gpio_pull_enable(GPIO_CTP_EINT_PIN, GPIO_PULL_DISABLE);
-	 */
 	tpd_gpio_as_int(GTP_INT_PORT);
 
 	msleep(50);
@@ -2809,13 +2740,6 @@ static void gtp_charger_affect_glove(void)
         ret = gtp_i2c_write(i2c_client_point, chr_cmd, 3);
         if (ret > 0)
         {
-//              chr_cmd[2] = 0x0;
-//            ret = gtp_i2c_read(i2c_client_point, chr_cmd, 3);
-//                      if (ret < 0)
-//                      {
-//                          GTP_ERROR("GTP read TW_ ID failed");
-//                      }
-//                      printk("gtp_charger_affect_glove plugged in read 0x8040 data is :0x%x", chr_cmd[2]);
             GTP_INFO("Close glove mode when Charger Plugin");
         }
     }
@@ -2827,13 +2751,6 @@ static void gtp_charger_affect_glove(void)
         ret = gtp_i2c_write(i2c_client_point, chr_cmd, 3);
         if (ret > 0)
         {
-//              chr_cmd[2] = 0x0;
-//              ret = gtp_i2c_read(i2c_client_point, chr_cmd, 3);
-//                      if (ret < 0)
-//                      {
-//                          GTP_ERROR("GTP read TW_ ID failed");
-//                      }
-//                      printk("gtp_charger_affect_glove plugged out read 0x8040 data is :0x%x", chr_cmd[2]);
             GTP_INFO("Open glove mode when Charger Plugout");
         }
     }
@@ -2921,6 +2838,7 @@ static int touch_event_handler(void *unused)
 	char **envp;
 /****  end by phg ****/
 	u8 doze_buf[3] = { 0x81, 0x4B };
+    uint16_t gesture_key = KEY_UNKNOWN;
 #endif
 
 	sched_setscheduler(current, SCHED_RR, &param);
@@ -2969,41 +2887,37 @@ static int touch_event_handler(void *unused)
                     ((doze_buf[2] == 'w') && (support_gesture & TW_SUPPORT_W_SLIDE_WAKEUP))
                 )
                 {
-    //              if (doze_buf[2] != 0x5E)
-    //              {
-    //                  GTP_INFO(TAG_GEST "Wakeup by gesture(%c), light up the screen!", doze_buf[2]);
-    //              }
-    //              else
-    //              {
-    //                  GTP_INFO(TAG_GEST "Wakeup by gesture(^), light up the screen!");
-    //              }
-
                     GTP_INFO(TAG_GEST "Wakeup by gesture(%c), light up the screen!", doze_buf[2]);
                     doze_status = DOZE_WAKEUP;
                     if ('c' == doze_buf[2])
                     {
                         sprintf(wakeup_string_buffer,"c");
                         envp = c_wakeup;
+		                gesture_key = KEY_GESTURE_SLIDE_C;
                     }
                     else if ('e' == doze_buf[2])
                     {
                         sprintf(wakeup_string_buffer,"e");
                         envp = e_wakeup;
+		                gesture_key = KEY_GESTURE_SLIDE_E;
                     }
                     else if ('m' == doze_buf[2])
                     {
                         sprintf(wakeup_string_buffer,"m");
                         envp = m_wakeup;
+		                gesture_key = KEY_GESTURE_SLIDE_M;
                     }
                     else if ('o' == doze_buf[2])
                     {
                         sprintf(wakeup_string_buffer,"o");
                         envp = o_wakeup;
+		                gesture_key = KEY_GESTURE_SLIDE_O;
                     }
                     else if ('w' == doze_buf[2])
                     {
                         sprintf(wakeup_string_buffer,"w");
                         envp = w_wakeup;
+		                gesture_key = KEY_GESTURE_SLIDE_W;
                     }
                 }
                 else if ( ((doze_buf[2] == 0xAA) && (support_gesture & TW_SUPPORT_RIGHT_SLIDE_WAKEUP)) ||
@@ -3017,35 +2931,36 @@ static int touch_event_handler(void *unused)
                     {
                         sprintf(wakeup_string_buffer,"right");
                         envp = right_wakeup;
+		                gesture_key = KEY_GESTURE_SLIDE_RIGHT;
                     }
                     else if (0xAB == doze_buf[2])
                     {
                         sprintf(wakeup_string_buffer,"down");
                         envp = down_wakeup;
+		                gesture_key = KEY_GESTURE_SLIDE_DOWN;
                     }
                     else if (0xBA == doze_buf[2])
                     {
                         sprintf(wakeup_string_buffer,"up");
                         envp = up_wakeup;
+		                gesture_key = KEY_GESTURE_SLIDE_UP;
                     }
                     else if (0xBB == doze_buf[2])
                     {
                         sprintf(wakeup_string_buffer,"left");
                         envp = left_wakeup;
+		                gesture_key = KEY_GESTURE_SLIDE_LEFT;
                     }
 
                   GTP_INFO(TAG_GEST "%s slide to light up the screen!", *envp);
                 }
-#if GTP_DBL_CLK_WAKEUP
-                else if (0xC0 == (doze_buf[2] & 0xC0) && (support_gesture & TW_SUPPORT_DOUBLE_CLICK_WAKEUP) ) // double click wakeup modified by sunxuebin for gesture wake up
-#else
-                else if (0xCC == doze_buf[2] && (support_gesture & TW_SUPPORT_DOUBLE_CLICK_WAKEUP)) //modified by sunxuebin for gesture wake up
-#endif
+                else if (0xC0 == (doze_buf[2] & 0xC0) && (support_gesture & TW_SUPPORT_DOUBLE_CLICK_WAKEUP) )
                 {
                         GTP_INFO(TAG_GEST "Double click to light up the screen!");
                         doze_status = DOZE_WAKEUP;
                         sprintf(wakeup_string_buffer,"double_click");
                         envp = doubleClick_wakeup;
+		                gesture_key = KEY_WAKEUP;
                 }
                 else
                 {
@@ -3055,12 +2970,12 @@ static int touch_event_handler(void *unused)
                         gtp_enter_doze(i2c_client_point);
                 }
 
-                if (DOZE_WAKEUP == doze_status)
+                if (DOZE_WAKEUP == doze_status && (gesture_key != KEY_UNKNOWN))
                 {
-                        struct device *touchscreen_dev;
-                        touchscreen_dev = touchscreen_get_dev();
-
-                        kobject_uevent_env(&touchscreen_dev->kobj, KOBJ_CHANGE, envp); //add by sunxuebin for gesture wake up
+					 	input_report_key(tpd->dev, gesture_key, 1);
+				     	input_sync(tpd->dev);
+				     	input_report_key(tpd->dev, gesture_key, 0);
+				     	input_sync(tpd->dev);
 
                         // clear 0x814B
                         doze_buf[2] = 0x00;
@@ -3842,10 +3757,7 @@ static void tpd_resume(struct device *h)
 #endif
 
 #if defined(CONFIG_GTP_SLIDE_WAKEUP)
-	if(support_gesture & TW_SUPPORT_GESTURE_IN_ALL){
 	   doze_status = DOZE_DISABLED;
-	}
-        else
 #endif
 	{
 	    mutex_lock(&i2c_access);

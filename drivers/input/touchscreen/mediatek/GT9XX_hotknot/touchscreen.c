@@ -855,6 +855,32 @@ static ssize_t  touchscreen_gesture_wakeup_show(struct device *dev,struct device
     return sprintf(buf, "%s\n",gesture);
 }
 
+static ssize_t  touchscreen_gesture_ctrl_show(struct device *dev,struct device_attribute *attr, char *buf)
+{
+    char ctrl[64]={0};
+
+    if(buf==NULL)
+    {
+        printk("BJ_BSP_Driver:CP_Touchscreen:buf is NULL!\n");
+        return -ENOMEM;
+    }
+
+    mutex_lock(&touchscreen_mutex);
+    if(TOUCH_IN_ACTIVE(0))
+    {
+        if(touchscreen_ops[0]->get_gesture_ctrl)
+            touchscreen_ops[0]->get_gesture_ctrl(ctrl);
+    }
+    else if(TOUCH_IN_ACTIVE(1))
+    {
+        if(touchscreen_ops[1]->get_gesture_ctrl)
+            touchscreen_ops[1]->get_gesture_ctrl(ctrl);
+    }
+    mutex_unlock(&touchscreen_mutex);
+
+    return sprintf(buf, "%s\n",ctrl);
+}
+
 static ssize_t  touchscreen_gesture_ctrl_store(struct device *dev,struct device_attribute *attr,const char *buf, size_t count)
 {
     int ret=0;
@@ -909,20 +935,20 @@ static ssize_t  touchscreen_smarthull_ctrl_store(struct device *dev,struct devic
     return count;
 }
 
-static DEVICE_ATTR(type, 0644, touchscreen_type_show, NULL);//444
-static DEVICE_ATTR(active, 0644, touchscreen_active_show, NULL);//444
-static DEVICE_ATTR(firmware_update, 0644, touchscreen_firmware_update_show, touchscreen_firmware_update_store);// phg 666
-static DEVICE_ATTR(calibrate, 0644, touchscreen_calibrate_show, touchscreen_calibrate_store); //664
-static DEVICE_ATTR(firmware_version, 0644, touchscreen_firmware_version_show,NULL);//644
-static DEVICE_ATTR(reset, 0644, NULL, touchscreen_reset_store);//224
-static DEVICE_ATTR(mode, 0644, touchscreen_mode_show, touchscreen_mode_store);//664
-static DEVICE_ATTR(oreitation, 0644, touchscreen_oreitation_show, touchscreen_oreitation_store);//664
-static DEVICE_ATTR(regs, 0644, touchscreen_regs_show, touchscreen_regs_store);//664
-static DEVICE_ATTR(debug, 0644, NULL, touchscreen_debug_store);//224
-static DEVICE_ATTR(vendor, 0644, touchscreen_vendor_show, NULL);//444
-static DEVICE_ATTR(gesture_wakeup, 0644, touchscreen_gesture_wakeup_show, NULL);//444
-static DEVICE_ATTR(gesture_ctrl, 0644, NULL, touchscreen_gesture_ctrl_store);//222
-static DEVICE_ATTR(smarthull_ctrl, 0644, NULL, touchscreen_smarthull_ctrl_store);//222
+static DEVICE_ATTR(type, 0666, touchscreen_type_show, NULL);//444
+static DEVICE_ATTR(active, 0666, touchscreen_active_show, NULL);//444
+static DEVICE_ATTR(firmware_update, 0666, touchscreen_firmware_update_show, touchscreen_firmware_update_store);// phg 666
+static DEVICE_ATTR(calibrate, 0666, touchscreen_calibrate_show, touchscreen_calibrate_store); //664
+static DEVICE_ATTR(firmware_version, 0666, touchscreen_firmware_version_show,NULL);//644
+static DEVICE_ATTR(reset, 0666, NULL, touchscreen_reset_store);//224
+static DEVICE_ATTR(mode, 0666, touchscreen_mode_show, touchscreen_mode_store);//664
+static DEVICE_ATTR(oreitation, 0666, touchscreen_oreitation_show, touchscreen_oreitation_store);//664
+static DEVICE_ATTR(regs, 0666, touchscreen_regs_show, touchscreen_regs_store);//664
+static DEVICE_ATTR(debug, 0666, NULL, touchscreen_debug_store);//224
+static DEVICE_ATTR(vendor, 0666, touchscreen_vendor_show, NULL);//444
+static DEVICE_ATTR(gesture_wakeup, 0666, touchscreen_gesture_wakeup_show, NULL);//444
+static DEVICE_ATTR(gesture_ctrl, 0666, touchscreen_gesture_ctrl_show, touchscreen_gesture_ctrl_store);//222
+static DEVICE_ATTR(smarthull_ctrl, 0666, NULL, touchscreen_smarthull_ctrl_store);//222
 
 static const struct attribute *touchscreen_attrs[] = {
     &dev_attr_type.attr,
